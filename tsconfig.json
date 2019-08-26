@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "outDir": "./dist/",
+        "sourceMap": true,
+        "noImplicitAny": false,
+        "module": "esnext",
+        "target": "esnext",
+        "experimentalDecorators": true,
+        "declaration": true,
+        "moduleResolution": "node",
+        "lib": [
+            "es2015",
+            "dom"
+        ]
+    },
+    "include": [
+        "./src/*"
+    ]
+}

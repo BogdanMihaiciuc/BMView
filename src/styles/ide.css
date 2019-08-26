@@ -1,0 +1,21 @@
+.BMView > .widget-bounding-box > .widget-selection-box {
+    width: unset !important;
+}
+
+.BMView {
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+    left: 0px !important;
+    top: 0px !important;
+}
+
+.BMViewInvisibleDialog .ui-widget-overlay, .BMViewInvisibleDialog .ui-dialog {
+    display: none !important;
+}
+
+.BMAttributedLabelViewContentNode {
+    position: relative;
+    display: inline-block;
+    box-sizing: border-box;
+}
