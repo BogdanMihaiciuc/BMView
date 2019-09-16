@@ -164,7 +164,7 @@ In order to start developing you need to do the following:
 
 1. Clone this repository
     ```
-    git clone http://roicentersvn.ptcnet.ptc.com/placatus/DemoWebpackWidget.git
+    git clone https://github.com/ptc-iot-sharing/BMView.git
     ```
 2. Open `package.json` and configure the `name`, `description`, and other fields you find relevant
 3. Run `npm install`. This will install the development dependencies for this project.
