@@ -2,6 +2,22 @@
 
 Requires [CoreUI](https://github.com/ptc-iot-sharing/BMCoreUI) and allows the use of BMView and constraint-based layouts in Thingworx.
 
+<!-- TOC depthfrom:2 orderedlist:false -->
+
+- [What is View](#what-is-view)
+- [Usage](#usage)
+    - [Layout constraints basics](#layout-constraints-basics)
+    - [Setting up layout constraints](#setting-up-layout-constraints)
+    - [Responsive layouts](#responsive-layouts)
+    - [Layout variables](#layout-variables)
+- [Developing](#developing)
+    - [Required software](#required-software)
+    - [Proposed folder structure](#proposed-folder-structure)
+    - [Developing](#developing)
+    - [Building and publishing](#building-and-publishing)
+
+<!-- /TOC -->
+
 ## What is View
 
 The `BMView` widget completely changes the way layouts are built in Thingworx. By using View, it is possible to define layouts using constraints that specify relationships between the different elements on the page instead of using the static positioning and size options normally available in Thingworx. For example, it is possible to define the layout using rules (called layout constraints) such that a button is positioned 16 pixels to the right of a textbox. A key feature of View and View-based widgets is that they are able to expose an intrinsic content size which tells the layout system which size an element should be so that all its content fits. This makes it easier to adapt layouts to different languages.
