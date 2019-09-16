@@ -166,10 +166,8 @@ In order to start developing you need to do the following:
     ```
     git clone https://github.com/ptc-iot-sharing/BMView.git
     ```
-2. Open `package.json` and configure the `name`, `description`, and other fields you find relevant
-3. Run `npm install`. This will install the development dependencies for this project.
-4. Run `npm run init`. This will create sample runtime and ide typescript files using the name.
-5. Start working on your widget.
+2. Run `npm install`. This will install the development dependencies for this project.
+3. Start working on your widget.
 
 ### Building and publishing
 
