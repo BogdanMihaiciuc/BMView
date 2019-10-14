@@ -1,6 +1,6 @@
 import { ThingworxRuntimeWidget, TWService, TWProperty } from 'typescriptwebpacksupport'
 
-declare var BMLayoutConstraint: any;
+//declare var BMLayoutConstraint: any;
 
 
 
@@ -514,7 +514,9 @@ export class BMViewWidget extends TWRuntimeWidget {
             let constraint = this.coreUIView.rootView.constraintWithIdentifier(constraintIdentifier);
 
             if (constraint) {
-                this._layoutUpdates[info.TargetProperty] = info.SinglePropertyValue;
+                // Thingworx often dispatches this value as a string even when passed as a number
+                const constraintConstant = parseFloat(info.SinglePropertyValue);
+                this._layoutUpdates[info.TargetProperty] = isNaN(constraintConstant) ? info.SinglePropertyValue : constraintConstant;
 
                 // When the binding is updated, save the pending value and apply it after a short delay
                 // This is used to batch together several updates that may be dispatched at the same time,
