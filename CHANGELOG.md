@@ -1,3 +1,7 @@
+# 2.5.1
+
+Resolved an issue that caused bindings to constraint constants to fail in certain cases at runtime.
+
 # 2.5
 
 View is now compatible with Thingworx 8.4.
