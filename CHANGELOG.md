@@ -1,3 +1,7 @@
+# 2.5.2
+
+Resolved an issue that caused constraints created by old versions of the extension to not be loaded.
+
 # 2.5.1
 
 Resolved an issue that caused bindings to constraint constants to fail in certain cases at runtime.

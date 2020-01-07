@@ -863,6 +863,22 @@ export class BMViewWidget extends TWComposerWidget implements BMWindowDelegate {
         // The serialized constraints have the same properties as a BMLayoutConstraint, except that
         // the views are stored as IDs from which the view references are then retrieved
         constraintsArray.forEach(constraintDefinition => {
+            // Some really old versions of view had a different serialization format
+            if ('_sourceViewID' in constraintDefinition) {
+                constraintDefinition._sourceView = constraintDefinition._sourceViewID;
+                constraintDefinition._targetView = constraintDefinition._targetViewID;
+
+                if (constraintDefinition._sourceViewAttribute === BMLayoutAttribute.AspectRatio) {
+                    constraintDefinition._kind = BMLayoutConstraintKind.AspectRatio;
+                }
+                else if (constraintDefinition._sourceViewAttribute === BMLayoutAttribute.Top || constraintDefinition._sourceViewAttribute == BMLayoutAttribute.Bottom || constraintDefinition._sourceViewAttribute === BMLayoutAttribute.Height || constraintDefinition._sourceViewAttribute === BMLayoutAttribute.CenterY) {
+                    constraintDefinition._kind = BMLayoutConstraintKind.Vertical;
+                }
+                else {
+                    constraintDefinition._kind = BMLayoutConstraintKind.Horizontal;
+                }
+
+            }
             let constraint = BMLayoutConstraint.constraintWithSerializedConstraint(constraintDefinition, {viewIDs: ID => this.viewForID(prefix + ID)});
             // Skip constraints that are no longer valid e.g. if their widget is removed
             if (!constraint) return;
