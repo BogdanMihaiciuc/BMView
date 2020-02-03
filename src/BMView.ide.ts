@@ -1,4 +1,5 @@
-///<reference path="../node_modules/bm-core-ui/lib/@types/BMCoreUI.min.d.ts"/>
+////<reference path="../node_modules/bm-core-ui/lib/@types/BMCoreUI.min.d.ts"/>
+///<reference path="../../BMCoreUI/build/ui/BMCoreUI/BMCoreUI.d.ts"/>
 
 // automatically import the css file
 import { ThingworxComposerWidget } from 'typescriptwebpacksupport'
@@ -453,7 +454,7 @@ TW.IDE.Dialogs.BMViewWidget = function () {
 }
 
 @ThingworxComposerWidget
-export class BMViewWidget extends TWComposerWidget implements BMWindowDelegate {
+export class BMViewWidget extends TWComposerWidget implements BMLayoutEditorDelegate {
 
     /**
      * Represents this widget's view class. For widgets that directly create their views,
@@ -941,6 +942,50 @@ export class BMViewWidget extends TWComposerWidget implements BMWindowDelegate {
     
             this.isEditingLayout = YES;
         }
+    }
+
+    layoutEditorAdditionalSettingSectionsForTab(layoutEditor: BMThingworxLayoutEditor, tab: BMLayoutEditorSettingsTab): BMLayoutEditorSettingsSection[] {
+        const result = [];
+
+        if (tab.constraint && tab.name == 'Attributes') {
+            const thingworxSection = BMLayoutEditorSettingsSection.section();
+
+            const settingHandler = {
+                get identifier(): string {
+                    return tab.constraint.identifier;
+                },
+                set identifier(value: string) {
+                    if (layoutEditor.view.constraintWithIdentifier(value)) return;
+
+                    if (layoutEditor.bindableConstraints.has(tab.constraint.identifier)) {
+                        layoutEditor.bindableConstraints.delete(tab.constraint.identifier);
+                        layoutEditor.bindableConstraints.add(value);
+                    }
+                    tab.constraint.identifier = value;
+                },
+
+                get bindable(): boolean {
+                    return layoutEditor.bindableConstraints.has(tab.constraint.identifier);
+                },
+                set bindable(value: boolean) {
+                    if (value) {
+                        layoutEditor.bindableConstraints.add(tab.constraint.identifier);
+                    }
+                    else {
+                        layoutEditor.bindableConstraints.delete(tab.constraint.identifier);
+                    }
+                }
+            };
+
+            const identifierSetting = BMLayoutEditorSetting.settingWithName('Identifier', {kind: BMLayoutEditorSettingKind.String, target: settingHandler, property: 'identifier'});
+            const bindableSetting = BMLayoutEditorSetting.settingWithName('Bindable', {kind: BMLayoutEditorSettingKind.Boolean, target: settingHandler, property: 'bindable'});
+
+            thingworxSection.settings = [identifierSetting, bindableSetting];
+            result.push(thingworxSection);
+        }
+        
+
+        return result;
     }
 
     /**

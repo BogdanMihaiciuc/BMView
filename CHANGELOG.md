@@ -1,3 +1,7 @@
+# 2.6.0
+
+Support for Core UI 2.6.
+
 # 2.5.2
 
 Resolved an issue that caused constraints created by old versions of the extension to not be loaded.
