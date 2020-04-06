@@ -409,7 +409,7 @@ function BMViewForThingworxWidget(widget: TWComposerWidget, {recreated} : {recre
                 (view as any).supportsAutomaticIntrinsicSize = YES;
                 break;
             case 'Collection View':
-                (view as any).supportsAutomaticIntrinsicSize = YES;
+                (view as any).supportsAutomaticIntrinsicSize = NO;
                 view.didSetFrame = frame => _widget.collectionView.frame = frame;
                 break;
             default:
@@ -453,6 +453,11 @@ TW.IDE.Dialogs.BMViewWidget = function () {
     }
 }
 
+
+/**
+ * The scroll view widget is a subclass of the view widget that allows the creation of
+ * constraint based scrolling containers.
+ */
 @ThingworxComposerWidget
 export class BMViewWidget extends TWComposerWidget implements BMLayoutEditorDelegate {
 
@@ -1150,8 +1155,13 @@ export class BMViewWidget extends TWComposerWidget implements BMLayoutEditorDele
 
 }
 
+
+/**
+ * The layout guide widget is a subclass of the view widget that allows the creation of
+ * views whose position can be changed by users at runtime via drag & drop.
+ */
 @ThingworxComposerWidget
-class BMScrollViewWidget extends BMViewWidget {
+export class BMScrollViewWidget extends BMViewWidget {
 
     isTransparentToCoreUILayout: boolean = YES;
 
@@ -1240,8 +1250,12 @@ class BMScrollViewWidget extends BMViewWidget {
 
 }
 
+/**
+ * The attributed label view widget is a subclass of the view widget that allows the creation of labels
+ * that contain customizable arguments that can be bound independently.
+ */
 @ThingworxComposerWidget
-class BMLayoutGuideWidget extends BMViewWidget {
+export class BMLayoutGuideWidget extends BMViewWidget {
 
     widgetIconUrl(): string {
         return require('./images/layoutGuideIcon.png');
@@ -1270,8 +1284,12 @@ class BMLayoutGuideWidget extends BMViewWidget {
     }
 }
 
+/**
+ * The attributed label view widget is a subclass of the view widget that allows the creation of labels
+ * that contain customizable arguments that can be bound independently.
+ */
 @ThingworxComposerWidget
-class BMAttributedLabelViewWidget extends BMViewWidget {
+export class BMAttributedLabelViewWidget extends BMViewWidget {
 
 
     /**
@@ -1754,6 +1772,77 @@ class BMAttributedLabelViewWidget extends BMViewWidget {
         }
 
         return super.afterSetProperty(name, value);
+    }
+
+}
+
+/**
+ * The text field widget is a subclass of the view widget that allows the creation of text fields that support
+ * automatic completion and suggestions.
+ */
+@ThingworxComposerWidget
+export class BMTextFieldWidget extends BMViewWidget {
+
+    renderHtml(): string {
+        return '<input type="text" class="widget-content BMView"></input>';
+    }
+
+    widgetProperties(): TWWidgetProperties {
+        const properties = super.widgetProperties();
+
+        properties.isContainer = NO;
+        properties.name = 'Text Field';
+        properties.description = 'A text field that supports suggestions and automatic completion';
+
+        properties.properties.Cursor.isVisible = NO;
+
+        const widgetProperties = BMCopyProperties({
+            Value: {
+                baseType: 'STRING',
+                description: 'The text within this text field.',
+                isBindingTarget: YES,
+                isBindingSource: YES
+            },
+            Suggestions: {
+                baseType: 'INFOTABLE',
+                description: 'An optional list of suggestions to use for autocompletion.',
+                isBindingTarget: YES
+            },
+            SuggestionField: {
+                baseType: 'FIELDNAME',
+                sourcePropertyName: 'Suggestions',
+                description: 'When suggestions are used, this represents the infotable field containing the suggestions.'
+            },
+            ShowsSuggestionsDropdown: {
+                baseType: 'BOOLEAN',
+                defaultValue: YES,
+                description: 'When enabled, the suggestions will be displayed in a drop down menu while the text field is focused.'
+            },
+            AutoCompletes: {
+                baseType: 'BOOLEAN',
+                defaultValue: YES,
+                description: 'When enabled, the closest suggestion will be automatically completed while the user types in the text field.'
+            },
+            SelectsSuggestion: {
+                baseType: 'BOOLEAN',
+                defaultValue: NO,
+                description: 'When enabled, whenever this text field\'s value matches a suggestion, the row containing that suggestion will be selected.'
+            }
+        } as Dictionary<TWWidgetProperty>, 
+        properties.properties);
+
+        properties.properties = widgetProperties;
+
+        return properties;
+    }
+
+    widgetEvents(): Dictionary<TWWidgetEvent> {
+        return {
+            ReturnPressed: {description: 'Triggered upon the user pressing the return key.'},
+            ContentsDidChange: {description: 'Triggered whenever the contents in this text field change for any reason. This will be repeatedly triggered while the user is typing.'},
+            TextFieldDidAcquireFocus: {description: 'Triggered whenever this text field acquires keyboard focus.'},
+            TextFieldDidResignFocus: {description: 'Triggered whenever this text field loses keyboard focus.'}
+        }
     }
 
 }

@@ -168,6 +168,10 @@ export function BMViewForThingworxWidget(widget: TWRuntimeWidget): BMView {
 }
 
 
+/**
+ * The view widget allows the use of BMView and constraints based layouts in thingworx.
+ * It also provides an editor that can be used to customize the layout.
+ */
 @ThingworxRuntimeWidget
 export class BMViewWidget extends TWRuntimeWidget {
 
@@ -589,6 +593,10 @@ export class BMViewWidget extends TWRuntimeWidget {
     }
 }
 
+/**
+ * The scroll view widget is a subclass of the view widget that allows the creation of
+ * constraint based scrolling containers.
+ */
 @ThingworxRuntimeWidget
 export class BMScrollViewWidget extends BMViewWidget {
 
@@ -682,6 +690,10 @@ export class BMScrollViewWidget extends BMViewWidget {
     }
 }
 
+/**
+ * The layout guide widget is a subclass of the view widget that allows the creation of
+ * views whose position can be changed by users at runtime via drag & drop.
+ */
 @ThingworxRuntimeWidget
 export class BMLayoutGuideWidget extends BMViewWidget {
 
@@ -741,8 +753,12 @@ function BMStringWithLocation(location: {latitude: any, longitude: any}, {usingF
     return format ? `${location.latitude.format(format)} : ${location.longitude.format(format)}` : `${location.latitude.toString()} : ${location.longitude.toString()}`;
 }
 
+/**
+ * The attributed label view widget is a subclass of the view widget that allows the creation of labels
+ * that contain customizable arguments that can be bound independently.
+ */
 @ThingworxRuntimeWidget
-class BMAttributedLabelViewWidget extends BMViewWidget {
+export class BMAttributedLabelViewWidget extends BMViewWidget {
     
     /**
      * The CoreUI view managing this widget.
@@ -1055,6 +1071,102 @@ class BMAttributedLabelViewWidget extends BMViewWidget {
                 }
             }
         }
+    }
+
+}
+
+/**
+ * The text field widget is a subclass of the view widget that allows the creation of text fields that support
+ * automatic completion and suggestions.
+ */
+@ThingworxRuntimeWidget
+export class BMTextFieldWidget extends BMViewWidget implements BMTextFieldDelegate {
+
+    /**
+     * The text field's current value.
+     */
+    @TWProperty('Value') value: string;
+
+    /**
+     * An optional list of suggestions to use for autocompletion.
+     */
+    @TWProperty('Suggestions') data?: TWInfotable;
+
+    /**
+     * When suggestions are used, this represents the infotable field containing the suggestions.
+     */
+    @TWProperty('SuggestionField') suggestionField: string;
+
+    /**
+     * When enabled, the suggestions will be displayed in a drop down menu while the text field is focused.
+     */
+    @TWProperty('ShowsSuggestionsDropdown') showsDropdown: boolean;
+
+    /**
+     * When enabled, the closest suggestion will be automatically completed while the user types in the text field.
+     */
+    @TWProperty('AutoCompletes') autoCompletes: boolean;
+
+    /**
+     * When enabled, whenever this text field's value matches a suggestion, the row containing that suggestion will be selected.
+     */
+    @TWProperty('SelectsSuggestion') selectsSuggestion: boolean;
+
+    /**
+     * This text field's input element.
+     */
+    private _input!: HTMLInputElement;
+
+    /**
+     * The CoreUI view managing this widget.
+     */
+    protected _coreUIView: BMTextField;
+    get coreUIView(): BMTextField {
+        if (!this._coreUIView) {
+            let view = BMTextField.textField();
+            view.debuggingName = this.getProperty('DisplayName');
+            this._coreUIView = view;
+            view.node.classList.add('widget-content');
+            view.node.classList.add('widget-bounding-box');
+
+            view.node.addEventListener('focus', e => this.jqElement.triggerHandler('TextFieldDidAcquireFocus'));
+            view.node.addEventListener('blur', e => this.jqElement.triggerHandler('TextFieldDidResignFocus'));
+
+            view.delegate = this;
+            this._input = view.node as HTMLInputElement;
+        }
+        return this._coreUIView;
+    }
+    
+    textFieldSuggestionsForText(textField: BMTextField, text: string): string[] {
+        if (this.data) {
+            return this.data.rows.map(d => d[this.suggestionField]);
+        }
+        return [];
+    }
+    
+    textFieldShouldShowSuggestions(textField: BMTextField): boolean {
+        return this.showsDropdown;
+    }
+    
+    textFieldShouldAutocompleteText(textField: BMTextField, text: string, {withSuggestion}: {withSuggestion: string}) {
+        return this.autoCompletes;
+    }
+    
+    textFieldContentsDidChange(textField: BMTextField) {
+        if (this.data && this.selectsSuggestion) {
+            const index = this.data.rows.findIndex(d => d[this.suggestionField] == this._input.value);
+            if (index != -1) {
+                this.updateSelection('Suggestions', [index]);
+            }
+        }
+        this.value = this._input.value;
+        this.jqElement.triggerHandler('ContentsDidChange');
+    }
+    
+    textFieldShouldReturn(textField: BMTextField) {
+        this.jqElement.triggerHandler('ReturnPressed');
+        return YES;
     }
 
 }
