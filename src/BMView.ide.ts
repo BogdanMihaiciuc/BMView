@@ -1,10 +1,10 @@
-////<reference path="../node_modules/bm-core-ui/lib/@types/BMCoreUI.min.d.ts"/>
-///<reference path="../../BMCoreUI/build/ui/BMCoreUI/BMCoreUI.d.ts"/>
+///<reference path="../node_modules/bm-core-ui/lib/@types/BMCoreUI.min.d.ts"/>
+////<reference path="../../BMCoreUI/build/ui/BMCoreUI/BMCoreUI.d.ts"/>
 
 // automatically import the css file
 import { ThingworxComposerWidget } from 'typescriptwebpacksupport'
 
-export class BMThingworxLayoutEditor extends BMLayoutEditor {
+export class BMThingworxLayoutEditor extends BMViewLayoutEditor {
     bindableConstraints: Set<string> = new Set;
 
     createAdditionalSettingsForConstraint(constraint, {withReferenceView: view, inContainer: container}: {withReferenceView: BMView, inContainer: DOMNode}) {
