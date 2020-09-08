@@ -1,3 +1,9 @@
+# 2.6
+
+Support for Thingworx 9.
+
+Support for Core UI 2.6 and the new layout editor.
+
 # 2.6.0 Beta 8
 
 Support for Thingworx 9.
