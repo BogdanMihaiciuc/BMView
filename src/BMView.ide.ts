@@ -2,7 +2,7 @@
 ///<reference path="../../BMCoreUI/build/ui/BMCoreUI/BMCoreUI.d.ts"/>
 
 // automatically import the css file
-import { ThingworxComposerWidget } from 'typescriptwebpacksupport'
+import { ThingworxComposerWidget } from 'typescriptwebpacksupport/widgetidesupport'
 
 export class BMThingworxLayoutEditor extends BMViewLayoutEditor {
     bindableConstraints: Set<string> = new Set;
@@ -1110,7 +1110,7 @@ export class BMViewWidget extends TWComposerWidget implements BMLayoutEditorDele
         }
         else {
             // TODO test with new composer
-            const mashupName: string = TW.IDE.CurrentTab.entityName;
+            const mashupName: string = 'CurrentTab' in TW.IDE ? TW.IDE.CurrentTab.entityName : TW.IDE.Workspace.entityModel.name;
             if (this.getProperty('ExportsLayoutVariables')) {
 
                 // Initialize this widget's layout variable provider

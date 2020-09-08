@@ -1,3 +1,7 @@
+# 2.6.0 Beta 8
+
+Support for Thingworx 9.
+
 # 2.6.0
 
 Support for Core UI 2.6.

@@ -1,4 +1,4 @@
-import { ThingworxRuntimeWidget, TWService, TWProperty } from 'typescriptwebpacksupport'
+import { ThingworxRuntimeWidget, TWService, TWProperty } from 'typescriptwebpacksupport/widgetruntimesupport'
 
 //declare var BMLayoutConstraint: any;
 
