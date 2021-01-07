@@ -2,7 +2,7 @@
 ///<reference path="../../BMCoreUI/build/ui/BMCoreUI/BMCoreUI.d.ts"/>
 
 // automatically import the css file
-import { ThingworxComposerWidget } from 'typescriptwebpacksupport/widgetidesupport'
+import { TWWidgetDefinition } from 'typescriptwebpacksupport/widgetIDESupport'
 
 export class BMThingworxLayoutEditor extends BMViewLayoutEditor {
     bindableConstraints: Set<string> = new Set;
@@ -458,7 +458,7 @@ TW.IDE.Dialogs.BMViewWidget = function () {
  * The scroll view widget is a subclass of the view widget that allows the creation of
  * constraint based scrolling containers.
  */
-@ThingworxComposerWidget
+@TWWidgetDefinition('View')
 export class BMViewWidget extends TWComposerWidget implements BMLayoutEditorDelegate {
 
     /**
@@ -509,7 +509,7 @@ export class BMViewWidget extends TWComposerWidget implements BMLayoutEditorDele
     layoutVariableProvider: BMThingworxLayoutVariableProvider;
 
     widgetIconUrl(): string {
-        return require('./images/icon.png');
+        return require('./images/icon.png').default;
     }
 
     widgetProperties(): TWWidgetProperties {
@@ -1160,7 +1160,7 @@ export class BMViewWidget extends TWComposerWidget implements BMLayoutEditorDele
  * The layout guide widget is a subclass of the view widget that allows the creation of
  * views whose position can be changed by users at runtime via drag & drop.
  */
-@ThingworxComposerWidget
+@TWWidgetDefinition('Scroll View')
 export class BMScrollViewWidget extends BMViewWidget {
 
     isTransparentToCoreUILayout: boolean = YES;
@@ -1178,7 +1178,7 @@ export class BMScrollViewWidget extends BMViewWidget {
     _coreUIView: BMScrollView;
 
     widgetIconUrl(): string {
-        return require('./images/scrollViewIcon.png');
+        return require('./images/scrollViewIcon.png').default;
     }
 
     widgetProperties(): TWWidgetProperties {
@@ -1254,11 +1254,11 @@ export class BMScrollViewWidget extends BMViewWidget {
  * The attributed label view widget is a subclass of the view widget that allows the creation of labels
  * that contain customizable arguments that can be bound independently.
  */
-@ThingworxComposerWidget
+@TWWidgetDefinition('Layout Guide')
 export class BMLayoutGuideWidget extends BMViewWidget {
 
     widgetIconUrl(): string {
-        return require('./images/layoutGuideIcon.png');
+        return require('./images/layoutGuideIcon.png').default;
     }
 
     widgetProperties(): TWWidgetProperties {
@@ -1288,7 +1288,7 @@ export class BMLayoutGuideWidget extends BMViewWidget {
  * The attributed label view widget is a subclass of the view widget that allows the creation of labels
  * that contain customizable arguments that can be bound independently.
  */
-@ThingworxComposerWidget
+@TWWidgetDefinition('Label View')
 export class BMAttributedLabelViewWidget extends BMViewWidget {
 
 
@@ -1345,7 +1345,7 @@ export class BMAttributedLabelViewWidget extends BMViewWidget {
     }
 
     widgetIconUrl(): string {
-        return require('./images/labelViewIcon.png');
+        return require('./images/labelViewIcon.png').default;
     }
 
     widgetProperties(): TWWidgetProperties {
@@ -1780,7 +1780,7 @@ export class BMAttributedLabelViewWidget extends BMViewWidget {
  * The text field widget is a subclass of the view widget that allows the creation of text fields that support
  * automatic completion and suggestions.
  */
-@ThingworxComposerWidget
+@TWWidgetDefinition('Text Field')
 export class BMTextFieldWidget extends BMViewWidget {
 
     renderHtml(): string {

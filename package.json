@@ -54,6 +54,6 @@
         "terser-webpack-plugin": "2.3.4"
     },
     "dependencies": {
-        "typescriptwebpacksupport": "github:stefan-lacatus/ThingworxWidgetSupportPackage#master"
+        "typescriptwebpacksupport": "^2.0.9"
     }
 }
