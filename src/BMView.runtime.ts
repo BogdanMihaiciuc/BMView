@@ -1,4 +1,4 @@
-import { ThingworxRuntimeWidget, TWService, TWProperty } from 'typescriptwebpacksupport/widgetruntimesupport'
+import { TWWidgetDefinition, TWService, TWProperty } from 'typescriptwebpacksupport/widgetRuntimeSupport'
 
 //declare var BMLayoutConstraint: any;
 
@@ -172,7 +172,7 @@ export function BMViewForThingworxWidget(widget: TWRuntimeWidget): BMView {
  * The view widget allows the use of BMView and constraints based layouts in thingworx.
  * It also provides an editor that can be used to customize the layout.
  */
-@ThingworxRuntimeWidget
+@TWWidgetDefinition
 export class BMViewWidget extends TWRuntimeWidget {
 
     /**
@@ -597,7 +597,7 @@ export class BMViewWidget extends TWRuntimeWidget {
  * The scroll view widget is a subclass of the view widget that allows the creation of
  * constraint based scrolling containers.
  */
-@ThingworxRuntimeWidget
+@TWWidgetDefinition
 export class BMScrollViewWidget extends BMViewWidget {
 
     styleRule: DOMNode;
@@ -694,7 +694,7 @@ export class BMScrollViewWidget extends BMViewWidget {
  * The layout guide widget is a subclass of the view widget that allows the creation of
  * views whose position can be changed by users at runtime via drag & drop.
  */
-@ThingworxRuntimeWidget
+@TWWidgetDefinition
 export class BMLayoutGuideWidget extends BMViewWidget {
 
     @TWProperty('InitialPositionLeft')
@@ -757,7 +757,7 @@ function BMStringWithLocation(location: {latitude: any, longitude: any}, {usingF
  * The attributed label view widget is a subclass of the view widget that allows the creation of labels
  * that contain customizable arguments that can be bound independently.
  */
-@ThingworxRuntimeWidget
+@TWWidgetDefinition
 export class BMAttributedLabelViewWidget extends BMViewWidget {
     
     /**
@@ -1079,7 +1079,7 @@ export class BMAttributedLabelViewWidget extends BMViewWidget {
  * The text field widget is a subclass of the view widget that allows the creation of text fields that support
  * automatic completion and suggestions.
  */
-@ThingworxRuntimeWidget
+@TWWidgetDefinition
 export class BMTextFieldWidget extends BMViewWidget implements BMTextFieldDelegate {
 
     /**
