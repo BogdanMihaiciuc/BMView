@@ -509,7 +509,7 @@ export class BMViewWidget extends TWComposerWidget implements BMLayoutEditorDele
     layoutVariableProvider: BMThingworxLayoutVariableProvider;
 
     widgetIconUrl(): string {
-        return require('./images/icon.png');
+        return require('./images/icon.png').default;
     }
 
     widgetProperties(): TWWidgetProperties {
@@ -1178,7 +1178,7 @@ export class BMScrollViewWidget extends BMViewWidget {
     _coreUIView: BMScrollView;
 
     widgetIconUrl(): string {
-        return require('./images/scrollViewIcon.png');
+        return require('./images/scrollViewIcon.png').default;
     }
 
     widgetProperties(): TWWidgetProperties {
@@ -1258,7 +1258,7 @@ export class BMScrollViewWidget extends BMViewWidget {
 export class BMLayoutGuideWidget extends BMViewWidget {
 
     widgetIconUrl(): string {
-        return require('./images/layoutGuideIcon.png');
+        return require('./images/layoutGuideIcon.png').default;
     }
 
     widgetProperties(): TWWidgetProperties {
@@ -1345,7 +1345,7 @@ export class BMAttributedLabelViewWidget extends BMViewWidget {
     }
 
     widgetIconUrl(): string {
-        return require('./images/labelViewIcon.png');
+        return require('./images/labelViewIcon.png').default;
     }
 
     widgetProperties(): TWWidgetProperties {
