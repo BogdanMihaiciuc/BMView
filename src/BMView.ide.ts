@@ -439,7 +439,16 @@ TW.IDE.Dialogs.BMViewWidget = function () {
 
     this.renderDialogHtml = function (widget) {
         setTimeout(() => {
-            widget.editLayout();
+            // In Thingworx 9.1, the widget reference is no longer a direct reference to the live widget
+            // Instead, it appears to be a model-only reference with all of the DOM references stripped
+            if (widget.jqElement) {
+                widget.editLayout();
+            }
+            else {
+                // In Thingworx 9.1, a correct reference to the widget has to be obtained manually
+                const widgetRef = $(document.getElementById(widget.properties.Id)).data('widget');
+                widgetRef.editLayout();
+            }
         }, 200);
         return '';
     }
@@ -447,7 +456,18 @@ TW.IDE.Dialogs.BMViewWidget = function () {
         // Immediately close this dialog upon being opened
         $('.ui-dialog.ui-widget.ui-widget-content').css({display: 'none'});
         requestAnimationFrame(_ => {
-            $('.ui-dialog.ui-widget.ui-widget-content').find('button').eq(0).click();
+            // In Thingworx 9.1 the way custom dialogs are created has changed and a different selector has to be used
+            const cancelButton = $('.ui-dialog.ui-widget.ui-widget-content').find('button');
+            if (cancelButton.length) {
+                cancelButton.eq(0).click();
+            }
+            else {
+                const cancelButton = $('.TwxMbConfigureColumnsDialog .ui-dialog .btn.btn-secondary')[0];
+
+                if (cancelButton) {
+                    cancelButton.click();
+                }
+            }
             document.body.classList.remove('BMViewInvisibleDialog');
         });
     }
