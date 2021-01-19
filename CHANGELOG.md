@@ -1,3 +1,11 @@
+# 2.6.7
+
+Resolves an issue that could prevent the list of widgets from loading correctly in Thingworx 9.1.
+
+Resolves an issue that caused to configure button to not work.
+
+Resolves an issue that could cause widgets to have improper positions or sizes in the editor.
+
 # 2.6
 
 Support for Thingworx 9.
