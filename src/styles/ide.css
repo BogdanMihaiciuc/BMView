@@ -10,7 +10,7 @@
     top: 0px !important;
 }
 
-.BMViewInvisibleDialog .ui-widget-overlay, .BMViewInvisibleDialog .ui-dialog {
+.BMViewInvisibleDialog .ui-widget-overlay, .BMViewInvisibleDialog .ui-dialog, .BMViewInvisibleDialog .TwxMbConfigureColumnsDialog {
     display: none !important;
 }
 
@@ -18,4 +18,8 @@
     position: relative;
     display: inline-block;
     box-sizing: border-box;
+}
+
+.BMLayoutEditorWorkspace .widget-bounding-box > :not(.widget-content, .BMLayoutEditorViewSelector, .BMLayoutEditorLeadLine, .BMLayoutEditorConstraint) {
+    display: none !important;
 }
