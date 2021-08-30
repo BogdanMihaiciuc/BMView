@@ -345,7 +345,11 @@ export class BMThingworxRemoteLayoutVariableProvider extends BMThingworxLayoutVa
  * that widget in the composer and the custom subclass is reserved for use at runtime.
  */
 class BMComposerWidgetView extends BMView {
+
+    //@ts-ignore
     _contentNode: DOMNode;
+
+    //@ts-ignore
     get contentNode() {
         return this._contentNode;
     }
@@ -1204,6 +1208,7 @@ export class BMScrollViewWidget extends BMViewWidget {
     /**
      * The view used by this widget.
      */
+    //@ts-ignore
     _coreUIView: BMScrollView;
 
     widgetIconUrl(): string {
@@ -1330,6 +1335,7 @@ export class BMAttributedLabelViewWidget extends BMViewWidget {
     /**
      * The view used by this widget.
      */
+    //@ts-ignore
     _coreUIView: BMAttributedLabelView;
 
     /**
