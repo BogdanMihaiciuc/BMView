@@ -355,7 +355,147 @@ class BMComposerWidgetView extends BMView {
     }
 
     get ID(): string {
-        return $(this.contentNode).data('widget').properties.Id;
+        return $(this.widget?.jqElement[0] || this.contentNode).data('widget').properties.Id;
+    }
+
+    /**
+     * An object that acts as an interface between the layout editor settings and the widget.
+     */
+    _settingsController?: object;
+
+    get settingsController(): object {
+        if (this._settingsController) return this._settingsController;
+
+        this._settingsController = {};
+        return this._settingsController;
+    }
+
+    /**
+     * The widget whose layout is managed by this view.
+     */
+    widget?: TWComposerWidget;
+
+    // @override - BMView
+    additionalSettingTabsForLayoutEditor(editor: BMLayoutEditor): BMLayoutEditorSettingsTab[] {
+        const tabs: BMLayoutEditorSettingsTab[] = [];
+
+        // Add a tab for the widget properties
+        const propertiesIcon = require('./images/widgetPropertiesIcon.png').default;
+        const propertiesTab = BMLayoutEditorSettingsTab.tabWithName('Widget Properties', {icon: propertiesIcon});
+        tabs.push(propertiesTab);
+
+        return tabs;
+    }
+
+    additionalSettingSectionsForTab(tab: BMLayoutEditorSettingsTab, {layoutEditor}: {layoutEditor: BMLayoutEditor}): BMLayoutEditorSettingsSection[] {
+        switch (tab.name) {
+            case 'Widget Properties':
+                return this.widgetPropertiesSections(tab, undefined, ['Width', 'Height', 'Top', 'Left', 'Id', 'Type', 'Description', 'DisplayName']);
+            case 'Attributes':
+                return this.widgetPropertiesSections(tab, ['Id', 'Type', 'Description', 'DisplayName']);
+        }
+        
+
+        return [];
+    }
+
+    /**
+     * Returns an array of setting sections containing the widget properties to display.
+     * @param include       If specified, only the properties in the given array will be included.
+     * @param exclude       If specified, the properties in the given array will be excluded.
+     * @returns             An array of setting sections.
+     */
+    widgetPropertiesSections(tab: BMLayoutEditorSettingsTab, include?: string[], exclude?: string[]): BMLayoutEditorSettingsSection[] {
+        const sections: BMLayoutEditorSettingsSection[] = [];
+
+        // Add a section for all the generic widget properties
+        if (!this.widget) return sections;
+        
+        // TODO: Allow specifying different sections
+        const propertiesSection = BMLayoutEditorSettingsSection.section();
+        propertiesSection.name = 'Properties';
+        propertiesSection.collapsible = YES;
+
+        sections.push(propertiesSection);
+
+        const settings = [];
+
+        Object.values(this.widget.allWidgetProperties().properties).forEach(prop => {
+            // Exclude events and services from here
+            if (prop.type != 'property') return;
+
+            // Exclude hidden properties
+            if (prop.isVisible === false) return;
+
+            // Exclude layout and info properties
+            if (exclude?.includes(prop.name)) return;
+
+            if (include && !include.includes(prop.name)) return;
+
+            // Ensure that the settings controller can handle this property
+            Object.defineProperty(this.settingsController, prop.name!, {
+                configurable: YES,
+                get: () => {
+                    return this.widget.getProperty(prop.name);
+                },
+                set: (value) => {
+                    this.widget.setProperty(prop.name, value);
+
+                    if (this.supportsAutomaticIntrinsicSize) {
+                        this.invalidateIntrinsicSize();
+                    }
+
+                    tab.updateSettings();
+                }
+            });
+
+            const target = this.settingsController;
+
+            // If the property is not editable, add it as a readonly property
+            if (prop.isEditable === false) {
+                const setting = BMLayoutEditorSetting.settingWithName(prop.name!, {kind: BMLayoutEditorSettingKind.Info, target, property: prop.name, nullable: YES});
+                settings.push(setting);
+                return;
+            }
+
+            // Create an appropriate setting based on the property type
+            let setting: BMLayoutEditorSetting;
+            switch (prop.baseType) {
+                case 'STRING':
+                    if (prop.selectOptions) {
+                        setting = BMLayoutEditorEnumSetting.settingWithName(prop.name!, {kind: BMLayoutEditorSettingKind.Enum, target, property: prop.name, nullable: YES});
+                        (setting as BMLayoutEditorEnumSetting).options = prop.selectOptions.map(o => {
+                            const item = BMMenuItem.menuItemWithName(o.text);
+                            item.userInfo = o.value;
+                            return item;
+                        });
+                    }
+                    else {
+                        setting = BMLayoutEditorSetting.settingWithName(prop.name!, {kind: BMLayoutEditorSettingKind.String, target, property: prop.name, nullable: YES});
+                    }
+                    break;
+                case 'NUMBER':
+                case 'INTEGER':
+                case 'LONG':
+                    setting = BMLayoutEditorSetting.settingWithName(prop.name!, {kind: BMLayoutEditorSettingKind.Number, target, property: prop.name, nullable: YES});
+                    break;
+                case 'BOOLEAN':
+                    setting = BMLayoutEditorSetting.settingWithName(prop.name!, {kind: BMLayoutEditorSettingKind.Boolean, target, property: prop.name});
+                    break;
+                case 'DATETIME':
+                    setting = BMLayoutEditorSetting.settingWithName(prop.name!, {kind: BMLayoutEditorSettingKind.Number, target, property: prop.name, nullable: YES});
+                    break;
+                default:
+                    setting = BMLayoutEditorSetting.settingWithName(prop.name!, {kind: BMLayoutEditorSettingKind.Info, target, property: prop.name, nullable: YES});
+                    break;
+            }
+
+            settings.push(setting);
+        });
+
+        propertiesSection.settings = settings;
+
+        return sections;
     }
 }
 
@@ -396,6 +536,8 @@ function BMViewForThingworxWidget(widget: TWComposerWidget, {recreated} : {recre
             view.release();
             view = BMView.viewForNode.call((_widget.coreUIViewClass || BMComposerWidgetView), BMBoundingBoxOfComposerWidget(widget));
         }
+
+        (view as BMComposerWidgetView).widget = widget;
 
         (view as any)._isStale = YES;
 
