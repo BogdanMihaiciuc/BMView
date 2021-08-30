@@ -31,6 +31,11 @@ export class BMThingworxLayoutEditor extends BMViewLayoutEditor {
 
         container.appendChild(this.settingsDivider());
     }
+
+    dismissAnimated(animated, args) {
+        document.body.classList.remove('BMViewEditorOpen');
+        return super.dismissAnimated(animated, args);
+    }
 }
 
 const EXTENSION_MODE = NO;
@@ -1084,6 +1089,10 @@ export class BMViewWidget extends TWComposerWidget implements BMLayoutEditorDele
         }
 
         if (identifiers) this.refreshBindableConstraintsWithIdentifiers(identifiers);
+    }
+
+    windowDidAppear(): void {
+        document.body.classList.add('BMViewEditorOpen');
     }
 
     /**
