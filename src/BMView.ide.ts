@@ -4,6 +4,11 @@
 // automatically import the css file
 import { TWWidgetDefinition } from 'typescriptwebpacksupport/widgetIDESupport'
 
+/**
+ * Should be set to `YES` to enable editing widget properties.
+ */
+const USE_WIDGET_PROPERTIES = NO;
+
 export class BMThingworxLayoutEditor extends BMViewLayoutEditor {
     bindableConstraints: Set<string> = new Set;
 
@@ -379,15 +384,21 @@ class BMComposerWidgetView extends BMView {
     additionalSettingTabsForLayoutEditor(editor: BMLayoutEditor): BMLayoutEditorSettingsTab[] {
         const tabs: BMLayoutEditorSettingsTab[] = [];
 
-        // Add a tab for the widget properties
-        const propertiesIcon = require('./images/widgetPropertiesIcon.png').default;
-        const propertiesTab = BMLayoutEditorSettingsTab.tabWithName('Widget Properties', {icon: propertiesIcon});
-        tabs.push(propertiesTab);
+        if (USE_WIDGET_PROPERTIES) {
+            // Add a tab for the widget properties
+            const propertiesIcon = require('./images/widgetPropertiesIcon.png').default;
+            const propertiesTab = BMLayoutEditorSettingsTab.tabWithName('Widget Properties', {icon: propertiesIcon});
+            tabs.push(propertiesTab);
+        }
 
         return tabs;
     }
 
     additionalSettingSectionsForTab(tab: BMLayoutEditorSettingsTab, {layoutEditor}: {layoutEditor: BMLayoutEditor}): BMLayoutEditorSettingsSection[] {
+        if (!USE_WIDGET_PROPERTIES) {
+            return [];
+        }
+
         switch (tab.name) {
             case 'Widget Properties':
                 return this.widgetPropertiesSections(tab, undefined, ['Width', 'Height', 'Top', 'Left', 'Id', 'Type', 'Description', 'DisplayName']);
