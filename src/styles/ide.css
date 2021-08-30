@@ -23,3 +23,7 @@
 .BMLayoutEditorWorkspace .widget-bounding-box > :not(.widget-content, .BMLayoutEditorViewSelector, .BMLayoutEditorLeadLine, .BMLayoutEditorConstraint) {
     display: none !important;
 }
+
+.BMViewEditorOpen > .au-target {
+    display: none !important;
+}
