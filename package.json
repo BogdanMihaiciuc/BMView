@@ -1,6 +1,6 @@
 {
     "name": "BMView",
-    "version": "2.6.11",
+    "version": "2.7.0",
     "description": "Allows using BMView, BMLayoutEditor and constraint-based layouts in Thingworx.",
     "thingworxServer": "http://localhost:8016",
     "thingworxUser": "Administrator",

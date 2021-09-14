@@ -1,4 +1,4 @@
-# 2.6.11
+# 2.7.0
 
 Improved support for Thingworx 9.1.
 
