@@ -24,11 +24,15 @@ export interface BMThingworxSerializedLayoutVariables {
  * Runtime widget view is a subclass of view used for Thingworx widgets that are not view aware.
  */
 export class BMRuntimeWidgetView extends BMView {
+    //@ts-ignore
     _contentNode: DOMNode;
+
+    //@ts-ignore
     get contentNode() {
         return this._contentNode;
     }
 
+    //@ts-ignore
     get debuggingName(): string {
         return this.widget.getProperty('DisplayName');
     }
@@ -605,6 +609,7 @@ export class BMScrollViewWidget extends BMViewWidget {
     /**
      * The CoreUI view managing this widget.
      */
+    //@ts-ignore
     protected _coreUIView: BMScrollView;
     get coreUIView(): BMScrollView {
         if (!this._coreUIView) {
@@ -706,6 +711,7 @@ export class BMLayoutGuideWidget extends BMViewWidget {
     /**
      * The CoreUI view managing this widget.
      */
+    //@ts-ignore
     protected _coreUIView: BMLayoutGuide;
     get coreUIView(): BMLayoutGuide {
         if (!this._coreUIView) {
@@ -763,6 +769,7 @@ export class BMAttributedLabelViewWidget extends BMViewWidget {
     /**
      * The CoreUI view managing this widget.
      */
+    //@ts-ignore
     protected _coreUIView: BMAttributedLabelView;
     get coreUIView(): BMAttributedLabelView {
         if (!this._coreUIView) {
@@ -1120,6 +1127,7 @@ export class BMTextFieldWidget extends BMViewWidget implements BMTextFieldDelega
     /**
      * The CoreUI view managing this widget.
      */
+    //@ts-ignore
     protected _coreUIView: BMTextField;
     get coreUIView(): BMTextField {
         if (!this._coreUIView) {

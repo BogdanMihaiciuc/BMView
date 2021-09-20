@@ -1,3 +1,9 @@
+# 2.7.0
+
+Improved support for Thingworx 9.1.
+
+Preliminary work towards editing widget properties directly in the layout editor. This capability is currently disabled in this version. A `USE_WIDGET_PROPERTIES` constant can be used to build this extension with this capability enabled.
+
 # 2.6.7
 
 Resolves an issue that could prevent the list of widgets from loading correctly in Thingworx 9.1.

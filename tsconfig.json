@@ -4,12 +4,12 @@
         "sourceMap": true,
         "noImplicitAny": false,
         "module": "esnext",
-        "target": "esnext",
+        "target": "ES2018",
         "experimentalDecorators": true,
         "declaration": true,
         "moduleResolution": "node",
         "lib": [
-            "es2015",
+            "ES2020",
             "dom"
         ]
     },
