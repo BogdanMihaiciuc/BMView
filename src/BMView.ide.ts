@@ -2511,7 +2511,7 @@ class BMKeyboardShortcutConfigurationWindow extends BMWindow implements BMCollec
         // Set up the add shortcut button
         const addShortcutButton = BMView.view();
         addShortcutButton.node.classList.add('BMButton');
-        addShortcutButton.node.innerHTML = '<i class="material-icons">playlist_add</i>';
+        addShortcutButton.node.innerHTML = 'Add Shortcut';
         addShortcutButton.supportsAutomaticIntrinsicSize = YES;
         this.contentView.addSubview(addShortcutButton);
         addShortcutButton.centerY.equalTo(targetLabel.centerY).isActive = YES;
@@ -2558,7 +2558,7 @@ class BMKeyboardShortcutConfigurationWindow extends BMWindow implements BMCollec
         this._oldKeyboardShortcuts = this.keyboardShortcuts.slice();
         this._newKeyboardShortcuts = this.keyboardShortcuts;
 
-        this.keyboardShortcuts.unshift(BMKeyboardShortcut.keyboardShortcutWithKeyCode(undefined, {modifiers: [], target: this.widget, action: 'shortcutTriggeredWithEvent'}));
+        this.keyboardShortcuts.unshift(BMKeyboardShortcut.keyboardShortcutWithKeyCode(undefined, {modifiers: [], target: this.widget, action: 'shortcutTriggeredWithEvent', preventsDefault: YES}));
 
         this.shortcutCollection.updateEntireDataAnimated();
 
