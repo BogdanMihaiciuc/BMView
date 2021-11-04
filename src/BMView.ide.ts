@@ -2811,6 +2811,13 @@ export class BMKeyboardShortcutController extends TWComposerWidget implements BM
         return events;
     }
 
+    widgetServices(): Dictionary<TWWidgetService> {
+        return {
+            AcquireFocus: {description: 'Causes the widget receiving keyboard shortcuts to acquire keyboard focus.'},
+            ResignFocus: {description: 'Causes the widget receiving keyboard shortcuts to resign keyboard focus.'}
+        };
+    }
+
     updateEventsWithShortcutList(shortcuts: BMNamedKeyboardShortcut[]) {
         const allProperties = this.allWidgetProperties().properties;
         const properties = allProperties as typeof allProperties & Dictionary<{isBaseProperty?: boolean}>

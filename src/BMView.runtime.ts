@@ -1316,6 +1316,21 @@ interface BMNamedKeyboardShortcut extends BMKeyboardShortcut {
         this.jqElement.triggerHandler('Shortcut:' + shortcut.name);
     }
 
+    serviceInvoked(service: string): void {
+        switch (service) {
+            case 'AcquireFocus':
+                if (this.targetNode) {
+                    this.targetNode.focus();
+                }
+                break;
+            case 'ResignFocus':
+                if (this.targetNode) {
+                    this.targetNode.blur();
+                }
+                break;
+        }
+    }
+
     beforeDestroy() {
         if (this.targetNode) {
             this.keyboardShortcuts.forEach(k => BMView.unregisterKeyboardShortcut(k, {forNode: this.targetNode as DOMNode}));
