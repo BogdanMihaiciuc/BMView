@@ -1313,6 +1313,9 @@ interface BMNamedKeyboardShortcut extends BMKeyboardShortcut {
      * @param shortcut      The keyboard shortcut that was triggered. 
      */
     shortcutTriggeredWithEvent(event: KeyboardEvent, {forKeyboardShortcut: shortcut}: {forKeyboardShortcut: BMNamedKeyboardShortcut}): void {
+        // Stop propagation to prevent more generic shortcuts from triggering
+        event.stopPropagation();
+
         this.jqElement.triggerHandler('Shortcut:' + shortcut.name);
     }
 
