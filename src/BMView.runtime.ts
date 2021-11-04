@@ -1178,3 +1178,166 @@ export class BMTextFieldWidget extends BMViewWidget implements BMTextFieldDelega
     }
 
 }
+
+
+/**
+ * Returns the widget with the specified id by searching the target mashup.
+ * {
+ * 	@param withId <String, nullable> 					Required if named is not specified. The ID of the widget to find
+ * 	@param named <String, nullable>						The display name of the widget, if specified, the search will find the first widget 
+ *														that has the specified id (if given) or the speficied display name.
+ * 	@param inMashup <TWMashup>							The mashup object in which to search.
+ * 	@param traverseContainedMashup <Boolean, nullable> 	Defaults to false. If set to true, the search will include other mashups contained within the source mashup.
+ * }
+ * @return <TWWidget, nullable> 						The actual widget object if found, null otherwise
+ */
+ function BMFindWidget(args) {
+	var id = args.withId;
+	var mashup = args.inMashup;
+	var name = args.named;
+	
+	if (!mashup) mashup = TW.Runtime.Workspace.Mashups.Current;
+	
+	return BMFindWidgetRecursive(id, name, mashup.rootWidget, args.traverseContainedMashup);
+}
+
+function BMFindWidgetRecursive(id, name, container, includeContainedMashup) {
+	
+	var widgets = container.getWidgets();
+	var length = widgets.length;
+	
+	for (var i = 0; i < length; i++) {
+		var widget = widgets[i];
+		
+		if (widget.idOfThisElement == id || widget.properties.Id == id) return widget;
+		if (widget.properties.DisplayName == name) return widget;
+		
+		var subWidgets = widget.getWidgets();
+		if (widget.properties.__TypeDisplayName == "Contained Mashup" && !includeContainedMashup) continue;
+		if (subWidgets.length > 0) {
+			widget = BMFindWidgetRecursive(id, name, widget, includeContainedMashup);
+			
+			if (widget) return widget;
+		}
+		
+		
+	}
+	
+	return null;
+	
+}
+
+/**
+ * An extension of the keyboard shortcut class that allows specifying a name.
+ */
+interface BMNamedKeyboardShortcut extends BMKeyboardShortcut {
+    /**
+     * The name of this keyboard shortcut.
+     */
+    name?: string;
+}
+
+
+/**
+ * The keyboard shortcut controller widget is a controller widget that can be used to add keyboard shortcuts to widgets
+ * or the entire document.
+ */
+ @TWWidgetDefinition
+ export class BMKeyboardShortcutController extends TWRuntimeWidget {
+ 
+    /**
+     * The target to which the shortcuts apply.
+     */
+    @TWProperty('Target') target: string;
+
+    /**
+     * When target is "Widget", this is the display name of the widget to which the shortcuts should apply.
+     */
+    @TWProperty('TargetWidget') targetWidget?: string;
+
+    /**
+     * A JSON array string representing the configured keyboard shortcut.
+     */
+    @TWProperty('_KeyboardShortcutConfiguration') keyboardShortcutConfiguration: string;
+
+    /**
+     * The keyboard shortcuts that should be registered.
+     */
+    private keyboardShortcuts: BMNamedKeyboardShortcut[] = [];
+
+    /**
+     * The target node to which the keyboard shortcuts will be attached.
+     */
+    private targetNode: DOMNode;
+
+    renderHtml() {
+        return `<div class="widget-content"></div>`;
+    }
+ 
+    afterRender() {
+        this.boundingBox[0].style.display = 'none';
+        try {
+            JSON.parse(this.keyboardShortcutConfiguration).forEach(k => {
+                const shortcut = BMKeyboardShortcut.keyboardShortcutWithSerializedKeyboardShortcut(k, {targetID: () => this});
+                shortcut.name = k._name;
+                this.keyboardShortcuts.push(shortcut);
+            });
+        }
+        catch (e) {
+            // An error is most likely a badly formatted json, log and ignore
+            console.error(e);
+        }
+
+        // Find the target node
+        if (this.target == 'Document') {
+            this.targetNode = window.document.body;
+        }
+        else if (this.target == 'Widget') {
+            const widget = BMFindWidget({named: this.targetWidget, inMashup: this.mashup}) as TWRuntimeWidget;
+            if (widget) {
+                this.targetNode = widget.boundingBox[0];
+            }
+        }
+
+        // Register the keyboard shortcuts if a target node was found
+        if (this.targetNode) {
+            for (const shortcut of this.keyboardShortcuts) {
+                BMView.registerKeyboardShortcut(shortcut, {forNode: this.targetNode});
+            }
+        }
+    }
+
+    /**
+     * Invoked when any keyboard shortcut is triggered. Triggers the associated mashup event.
+     * @param event         The keyboard event that triggered this action.
+     * @param shortcut      The keyboard shortcut that was triggered. 
+     */
+    shortcutTriggeredWithEvent(event: KeyboardEvent, {forKeyboardShortcut: shortcut}: {forKeyboardShortcut: BMNamedKeyboardShortcut}): void {
+        // Stop propagation to prevent more generic shortcuts from triggering
+        event.stopPropagation();
+
+        this.jqElement.triggerHandler('Shortcut:' + shortcut.name);
+    }
+
+    serviceInvoked(service: string): void {
+        switch (service) {
+            case 'AcquireFocus':
+                if (this.targetNode) {
+                    this.targetNode.focus();
+                }
+                break;
+            case 'ResignFocus':
+                if (this.targetNode) {
+                    this.targetNode.blur();
+                }
+                break;
+        }
+    }
+
+    beforeDestroy() {
+        if (this.targetNode) {
+            this.keyboardShortcuts.forEach(k => BMView.unregisterKeyboardShortcut(k, {forNode: this.targetNode as DOMNode}));
+        }
+    }
+ 
+ }

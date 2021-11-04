@@ -2034,3 +2034,827 @@ export class BMTextFieldWidget extends BMViewWidget {
     }
 
 }
+
+
+TW.IDE.Dialogs.BMKeyboardShortcutController = function () {
+    document.body.classList.add('BMViewInvisibleDialog');
+
+    this.renderDialogHtml = function (widget) {
+        setTimeout(() => {
+            // In Thingworx 9.1, the widget reference is no longer a direct reference to the live widget
+            // Instead, it appears to be a model-only reference with all of the DOM references stripped
+            if (widget.jqElement) {
+                widget.configureKeyboardShortcuts();
+            }
+            else {
+                // In Thingworx 9.1, a correct reference to the widget has to be obtained manually
+                const widgetRef = $(document.getElementById(widget.properties.Id)).data('widget');
+                widgetRef.configureKeyboardShortcuts();
+            }
+        }, 200);
+        return '';
+    }
+    this.afterRender = function () {
+        // Immediately close this dialog upon being opened
+        $('.ui-dialog.ui-widget.ui-widget-content').css({display: 'none'});
+        requestAnimationFrame(_ => {
+            // In Thingworx 9.1 the way custom dialogs are created has changed and a different selector has to be used
+            const cancelButton = $('.ui-dialog.ui-widget.ui-widget-content').find('button');
+            if (cancelButton.length) {
+                cancelButton.eq(0).click();
+            }
+            else {
+                const cancelButton = $('.TwxMbConfigureColumnsDialog .ui-dialog .btn.btn-secondary')[0];
+
+                if (cancelButton) {
+                    cancelButton.click();
+                }
+            }
+            document.body.classList.remove('BMViewInvisibleDialog');
+        });
+    }
+}
+
+/**
+ * A dictionary that contains the mapping between key codes and the character
+ * symbols that represent them.
+ */
+const BMKeyboardShortcutCharacterMap: Dictionary<string> = {
+    Backquote: '`',
+    Minus: '-',
+    Equal: '=',
+    BracketLeft: '[',
+    BracketRight: ']',
+    Backslash: '\\',
+    Semicolon: ';',
+    Quote: '\'',
+    Comma: ',',
+    Period: '.',
+    Slash: '/',
+    Enter: BMHTMLEntity.Return as string,
+    Escape: BMHTMLEntity.Escape as string,
+    Backspace: BMHTMLEntity.Delete as string,
+};
+
+/**
+ * An extension of the keyboard shortcut class that allows specifying a name.
+ */
+interface BMNamedKeyboardShortcut extends BMKeyboardShortcut {
+    /**
+     * The name of this keyboard shortcut.
+     */
+    name?: string;
+}
+
+/**
+ * A cell that displays a keyboard shortcut.
+ */
+class BMKeyboardShortcutCell extends BMCollectionViewCell {
+
+    private _keyboardShortcut: BMNamedKeyboardShortcut;
+
+    /**
+     * The keyboard shortcut displayed by this cell.
+     */
+    get keyboardShortcut(): BMNamedKeyboardShortcut {
+        return this._keyboardShortcut;
+    }
+    set keyboardShortcut(shortcut: BMNamedKeyboardShortcut) {
+        if (shortcut == this._keyboardShortcut) return;
+
+        this._keyboardShortcut = shortcut;
+        this._shortcutView.node.innerHTML = this._keyboardShortcutRepresentation;
+        this._preventsDefaultCheckbox.checked = shortcut.preventsDefault;
+        this._nameField.value = shortcut.name || '';
+    }
+
+    /**
+     * The configuration window managing keyboard shortcuts.
+     */
+    configurationWindow: BMKeyboardShortcutConfigurationWindow;
+
+    /**
+     * The view to which this cell's content is added.
+     */
+    contentView: BMView;
+
+    /**
+     * The view that displays and captures keyboard shortcuts.
+     */
+    private _shortcutView: BMView;
+
+    /**
+     * The input element that displays and controls the prevents default setting.
+     */
+    private _preventsDefaultCheckbox: HTMLInputElement;
+
+    /**
+     * The input element that displays and controls the shortcut's name.
+     */
+    private _nameField: HTMLInputElement;
+
+    initWithCollectionView(collectionView, args): BMKeyboardShortcutCell {
+        super.initWithCollectionView(collectionView, args);
+
+        // Set up the content view
+        this.contentView = BMView.view();
+        this.addSubview(this.contentView);
+        this.contentView.leading.equalTo(this.leading).isActive = YES;
+        this.contentView.trailing.equalTo(this.trailing).isActive = YES;
+        this.contentView.top.equalTo(this.top).isActive = YES;
+        this.contentView.bottom.equalTo(this.bottom).isActive = YES;
+
+        // Set up the name box
+        this._nameField = document.createElement('input');
+        this._nameField.type = 'text';
+        this._nameField.placeholder = 'New Shortcut';
+        this._nameField.classList.add('BMInput', 'BMLabel');
+        const nameView = BMView.viewForNode(this._nameField);
+        this.contentView.addSubview(nameView);
+        nameView.leading.equalTo(this.contentView.leading, {plus: 32}).isActive = YES;
+        nameView.width.equalTo(200 as any).isActive = YES;
+        nameView.centerY.equalTo(this.contentView.centerY).isActive = YES;
+        nameView.height.equalTo(32 as any).isActive = YES;
+        this._nameField.addEventListener('change', e => this._keyboardShortcut.name = this._nameField.value.replace(/\s+/g, ''));
+
+        // Set up the shortcut view that displays and captures keyboard shortcuts
+        const shortcutView = BMView.view();
+        shortcutView.node.classList.add('BMLabel', 'BMKeyboardShortcutView', 'BMCollectionViewCellEventHandler');
+        this.contentView.addSubview(shortcutView);
+        shortcutView.leading.equalTo(nameView.trailing, {plus: 16}).isActive = YES;
+        shortcutView.width.equalTo(128 as any).isActive = YES;
+        shortcutView.centerY.equalTo(this.contentView.centerY).isActive = YES;
+        shortcutView.height.equalTo(32 as any).isActive = YES;
+
+        shortcutView.node.tabIndex = -1;
+        shortcutView.node.addEventListener('keydown', event => this.shortcutKeyPressedWithEvent(event));
+
+        this._shortcutView = shortcutView;
+
+        // Set up the prevents default toggle and label
+        const preventsDefaultLabel = BMView.view();
+        preventsDefaultLabel.node.classList.add('BMLabel', 'BMSublabel');
+        preventsDefaultLabel.node.innerText = 'Prevents default: ';
+        this.contentView.addSubview(preventsDefaultLabel);
+        preventsDefaultLabel.supportsAutomaticIntrinsicSize = YES;
+        preventsDefaultLabel.centerY.equalTo(shortcutView.centerY).isActive = YES;
+
+        const preventsDefaultToggle = BMView.view();
+        this.contentView.addSubview(preventsDefaultToggle);
+        preventsDefaultToggle.leading.equalTo(preventsDefaultLabel.trailing, {plus: 8}).isActive = YES;
+        preventsDefaultToggle.centerY.equalTo(shortcutView.centerY).isActive = YES;
+        preventsDefaultToggle.width.equalTo(128 as any).isActive = YES;
+        preventsDefaultToggle.height.equalTo(24 as any).isActive = YES;
+
+        // Create the toggle
+        let value = document.createElement('label');
+        value.className = 'BMWindowSwitch';
+        value.style.margin = '0';
+        
+        value.innerHTML = `<input type="checkbox" data-toggle="YES"> OFF
+        <div class="BMWindowSwitchGutter">
+            <div class="BMWindowSwitchKnob"></div>
+        </div>
+        ON`;
+
+        const switchView = BMView.viewForNode(value);
+        preventsDefaultToggle.addSubview(switchView);
+        switchView.supportsAutomaticIntrinsicSize = YES;
+        switchView.debuggingName = 'BooleanSwitch';
+
+        switchView.centerY.equalTo(preventsDefaultToggle.centerY).isActive = YES;
+        switchView.leading.equalTo(preventsDefaultToggle.leading).isActive = YES;
+        switchView.width.equalTo(104 as any).isActive = YES;
+        switchView.height.equalTo(20 as any).isActive = YES;
+
+        this._preventsDefaultCheckbox = value.getElementsByTagName('input')[0];
+        this._preventsDefaultCheckbox.addEventListener('change', e => {
+            this._keyboardShortcut.preventsDefault = this._preventsDefaultCheckbox.checked;
+        });
+
+        // Create the delete button
+        const deleteButton = BMView.view();
+        deleteButton.node.classList.add('BMButton', 'BMButtonWeak');
+        deleteButton.node.innerText = '×';
+        deleteButton.supportsAutomaticIntrinsicSize = YES;
+        this.contentView.addSubview(deleteButton);
+        deleteButton.centerY.equalTo(this.contentView.centerY).isActive = YES;
+        deleteButton.trailing.equalTo(this.contentView.trailing, {plus: -32}).isActive = YES;
+        deleteButton.leading.equalTo(preventsDefaultToggle.trailing, {plus: 16}).isActive = YES;
+
+        deleteButton.node.addEventListener('click', e => this.configurationWindow.removeShortcut(this._keyboardShortcut));
+
+        return this;
+    }
+
+    /**
+     * Returns a string representation of the keyboard shortcut displayed by the cell.
+     */
+    private get _keyboardShortcutRepresentation(): string {
+        if (!this._keyboardShortcut) return '';
+
+        let representation: string = '';
+        const code = this._keyboardShortcut.keyCode || '';
+
+        if (code.startsWith('Key')) {
+            // Alphanumeric keys can be extracted from the key code
+            representation = code.substring(3);
+        }
+        else if (code.startsWith('Digit')) {
+            // Digit keys can also be extracted from the key code
+            representation = code.substring(5);
+        }
+        else {
+            // Otherwise use the character code map, defaulting to showing the code otherwise
+            representation = BMKeyboardShortcutCharacterMap[code] || code;
+        }
+
+        const isAppleSystem = (navigator.platform.startsWith('Mac') || /iPhone|iPad|iPod/.test(navigator.platform));
+
+        // Add the modifier keys
+        if (this._keyboardShortcut.modifiers.includes(BMKeyboardShortcutModifier.System)) {
+            if (isAppleSystem) {
+                representation = BMHTMLEntity.Command + representation;
+            }
+            else {
+                representation = 'Ctrl + ' + representation;
+            }
+        }
+
+        if (this._keyboardShortcut.modifiers.includes(BMKeyboardShortcutModifier.Command)) {
+            if (isAppleSystem) {
+                representation = BMHTMLEntity.Command + representation;
+            }
+            else {
+                representation = 'Win + ' + representation;
+            }
+        }
+
+        if (this._keyboardShortcut.modifiers.includes(BMKeyboardShortcutModifier.Shift)) {
+            if (isAppleSystem) {
+                representation = BMHTMLEntity.Shift + representation;
+            }
+            else {
+                representation = 'Shift + ' + representation;
+            }
+        }
+        
+        if (this._keyboardShortcut.modifiers.includes(BMKeyboardShortcutModifier.Option)) {
+            if (isAppleSystem) {
+                representation = BMHTMLEntity.Option + representation;
+            }
+            else {
+                representation = 'Alt + ' + representation;
+            }
+        }
+
+        if (this._keyboardShortcut.modifiers.includes(BMKeyboardShortcutModifier.Control)) {
+            if (isAppleSystem) {
+                representation = BMHTMLEntity.Control + representation;
+            }
+            else {
+                representation = 'Ctrl + ' + representation;
+            }
+        }
+
+        if (!representation) {
+            return 'Click to record';
+        }
+
+        return representation;
+    }
+
+    /**
+     * Invoked when the keyboard shortcut view captures any keypress.
+     * @param event         The keyboard event that triggered this action.
+     */
+    shortcutKeyPressedWithEvent(event: KeyboardEvent) {
+        event.preventDefault();
+
+        if (this._keyboardShortcut) {
+            // NOTE: initializers should be invoked multiple times for any object, but is safe for keyboard shortcut
+            this._keyboardShortcut.initWithKeyboardEvent(event, {
+                target: this._keyboardShortcut.target, 
+                action: this._keyboardShortcut.action, 
+                preventsDefault: this._keyboardShortcut.preventsDefault
+            });
+
+            this._shortcutView.node.innerHTML = this._keyboardShortcutRepresentation;
+        }
+    }
+}
+
+/**
+ * A class that provides the keyboard shortcut configuration UI for the keyboard shortcut controller.
+ */
+class BMKeyboardShortcutConfigurationWindow extends BMWindow implements BMCollectionViewDataSet<BMKeyboardShortcut>, BMCollectionViewDelegate, BMTextFieldDelegate {
+
+    /**
+     * The controller widget whose keyboard shortcut definitions are managed.
+     */
+    private widget!: BMKeyboardShortcutController;
+
+    /**
+     * The keyboard shortcuts currently defined.
+     */
+    keyboardShortcuts!: BMNamedKeyboardShortcut[];
+
+    /**
+     * During a data update, this contains a copy of the keyboard shortcuts prior to being modified.
+     */
+    private _oldKeyboardShortcuts?: BMNamedKeyboardShortcut[];
+
+    /**
+     * During a data upadte, this contains the new data set.
+     */
+    private _newKeyboardShortcuts?: BMNamedKeyboardShortcut[];
+
+    /**
+     * An array that contains the available widget names.
+     */
+    private widgetNames!: string[];
+
+    /**
+     * Returns a JSON array string containing the keyboard shortcut definitions.
+     */
+    get serializedShortcuts(): string {
+        return JSON.stringify(this.keyboardShortcuts.map(s => {
+            const serializedShortcut = s.serializedKeyboardShortcutWithTargetID('self')
+            serializedShortcut._name = s.name.replace(/\s+/g, '');
+            return serializedShortcut;
+        }));
+    }
+    
+
+    /**
+     * The collection view used to manage the keyboard shortcut list.
+     */
+    private shortcutCollection: BMCollectionView<BMKeyboardShortcut>;
+
+    // @override - BMView
+    initWithDOMNode(): never {
+        throw new Error('The keyboard shortcut configuration window must be initialized using initForWidget.');
+    }
+
+    // @override - BMWindow
+    initWithFrame(): never {
+        throw new Error('The keyboard shortcut configuration window must be initialized using initForWidget.');
+    }
+
+    /**
+     * Initializes this window with the given frame for the given widget.
+     * @param frame     The frame to use.
+     * @param args 
+     * @returns 
+     */
+    initForWidget(widget: BMKeyboardShortcutController): BMKeyboardShortcutConfigurationWindow {
+        const frame = BMRectMake(window.innerWidth / 2 - 400 | 0, window.innerHeight / 2 - 400 | 0, 800, 800);
+        super.initWithFrame(frame, {toolbar: YES, modal: NO});
+
+        this.widget = widget;
+        
+        try {
+            this.keyboardShortcuts = JSON.parse(widget.getProperty('_KeyboardShortcutConfiguration')).map(k => {
+                const shortcut = BMKeyboardShortcut.keyboardShortcutWithSerializedKeyboardShortcut(k, {targetID: () => this.widget}) as BMNamedKeyboardShortcut;
+                shortcut.name = k._name;
+
+                return shortcut;
+            });
+        }
+        catch (e) {
+            // This most likely a JSON formatting error, start over with an empty list
+            console.error(e);
+            this.keyboardShortcuts = [];
+        }
+
+        this.registerKeyboardShortcut(BMKeyboardShortcut.keyboardShortcutWithKeyCode('Escape', {
+            modifiers: [], 
+            target: this, 
+            action: 'dismissAnimated',
+            preventsDefault: YES
+        }));
+        this.registerKeyboardShortcut(BMKeyboardShortcut.keyboardShortcutWithKeyCode('Equal', {
+            modifiers: [BMKeyboardShortcutModifier.System], 
+            target: this, 
+            action: 'addShortcut',
+            preventsDefault: YES
+        }));
+
+        this.width.greaterThanOrEqualTo(740 as any).isActive = YES;
+
+        // Determine the available widget names
+		const rootWidget = widget.jqElement.closest('#mashup-root').data('widget');
+		this.widgetNames = ['Document', rootWidget.getProperty('DisplayName')];
+		
+		let widgets = rootWidget.widgets.slice();
+		while (widgets.length) {
+			const widget = widgets.pop();
+			this.widgetNames.push(widget.getProperty('DisplayName'));
+			widgets = widgets.concat(widget.widgets);
+		}
+
+        // Set up the header view
+        const headerView = BMView.view();
+        headerView.node.classList.add('BMKeyboardShortcutWindowToolbar');
+        this.contentView.addSubview(headerView);
+        headerView.leading.equalTo(this.contentView.leading).isActive = YES;
+        headerView.trailing.equalTo(this.contentView.trailing).isActive = YES;
+        headerView.top.equalTo(this.contentView.top).isActive = YES;
+
+        // Set up the close button
+        const closeButton = document.createElement('div');
+        closeButton.className = 'BMLayoutEditorToolbarButton BMLayoutEditorCloseButton';
+        closeButton.innerHTML = '<i class="material-icons">&#xE5CD;</i>';
+
+        closeButton.style.opacity = '1';
+        closeButton.style.pointerEvents = 'all';
+
+        closeButton.addEventListener('click', e => this.dismissAnimated(YES));
+        this.toolbar.appendChild(closeButton);
+
+        // Set up the title view
+        const titleView = BMView.view();
+        titleView.node.innerText = 'Configure Keyboard Shortcuts';
+        titleView.node.classList.add('BMWindowTitle');
+        this.contentView.addSubview(titleView);
+        titleView.supportsAutomaticIntrinsicSize = YES;
+        titleView.leading.equalTo(this.contentView.leading, {plus: 64}).isActive = YES;
+        titleView.centerY.equalTo(this.contentView.top, {plus: 32}).isActive = YES;
+
+        // Set up the target label
+        const targetLabel = BMView.view();
+        targetLabel.node.innerText = 'Target:';
+        targetLabel.node.classList.add('BMLabel', 'BMSublabel');
+        targetLabel.supportsAutomaticIntrinsicSize = YES;
+        this.contentView.addSubview(targetLabel);
+        targetLabel.leading.equalTo(this.contentView.leading, {plus: 32}).isActive = YES;
+        targetLabel.top.equalTo(titleView.bottom, {plus: 24}).isActive = YES;
+
+        // Set up the target box
+        const targetField = BMTextField.textField();
+        targetField.node.classList.add('BMLabel');
+        targetField.node.classList.add('BMInput');
+        this.contentView.addSubview(targetField);
+        targetField.centerY.equalTo(targetLabel.centerY).isActive = YES;
+        targetField.leading.equalTo(targetLabel.trailing, {plus: 8}).isActive = YES;
+        targetField.width.equalTo(300 as any).isActive = YES;
+        targetField.height.equalTo(32 as any).isActive = YES;
+        targetField.delegate = this;
+
+        if (widget.getProperty('Target') == 'Document') {
+            (targetField.node as HTMLInputElement).value = 'Document';
+        }
+        else {
+            (targetField.node as HTMLInputElement).value = 'TargetWidget';
+        }
+
+        // Set up the add shortcut button
+        const addShortcutButton = BMView.view();
+        addShortcutButton.node.classList.add('BMButton');
+        addShortcutButton.node.innerHTML = 'Add Shortcut';
+        addShortcutButton.supportsAutomaticIntrinsicSize = YES;
+        this.contentView.addSubview(addShortcutButton);
+        addShortcutButton.centerY.equalTo(targetLabel.centerY).isActive = YES;
+        addShortcutButton.trailing.equalTo(this.contentView.trailing, {plus: -32}).isActive = YES;
+
+        addShortcutButton.node.addEventListener('click', e => this.addShortcut());
+
+        headerView.bottom.equalTo(addShortcutButton.bottom, {plus: 16}).isActive = YES;
+
+        // Set up the shortcut collection
+        const shortcutCollection = BMCollectionView.collectionView();
+        shortcutCollection.node.style.position = 'absolute';
+        shortcutCollection.node.classList.add('BMKeyboardShortcutWindowContent')
+        this.contentView.addSubview(shortcutCollection);
+        shortcutCollection.top.equalTo(headerView.bottom).isActive = YES;
+        shortcutCollection.leading.equalTo(this.contentView.leading).isActive = YES;
+        shortcutCollection.trailing.equalTo(this.contentView.trailing).isActive = YES;
+        shortcutCollection.bottom.equalTo(this.contentView.bottom).isActive = YES;
+
+        shortcutCollection.registerCellClass(BMKeyboardShortcutCell, {forReuseIdentifier: 'KeyboardShortcut'});
+
+        const layout = BMCollectionViewFlowLayout.flowLayout();
+        layout.maximumCellsPerRow = 1;
+        layout.gravity = BMCollectionViewFlowLayoutGravity.Expand;
+        layout.rowSpacing = 0;
+        layout.topPadding = 0;
+        layout.bottomPadding = 0;
+        layout.cellSize = BMSizeMake(1, 64);
+        layout.contentGravity = BMCollectionViewFlowLayoutGravity.Start;
+        shortcutCollection.layout = layout;
+
+        shortcutCollection.supportsKeyboardNavigation = NO;
+        shortcutCollection.dataSet = this;
+
+        this.shortcutCollection = shortcutCollection;
+
+        return this;
+    }
+
+    /**
+     * Adds a new keyboard shortcut.
+     */
+    addShortcut() {
+        this._oldKeyboardShortcuts = this.keyboardShortcuts.slice();
+        this._newKeyboardShortcuts = this.keyboardShortcuts;
+
+        this.keyboardShortcuts.unshift(BMKeyboardShortcut.keyboardShortcutWithKeyCode(undefined, {modifiers: [], target: this.widget, action: 'shortcutTriggeredWithEvent', preventsDefault: YES}));
+
+        this.shortcutCollection.updateEntireDataAnimated();
+
+        this._oldKeyboardShortcuts = undefined;
+        this._newKeyboardShortcuts = undefined;
+    }
+    
+    /**
+     * Removes a keyboard shortcut.
+     * @param shortcut      The shortcut to remove.
+     */
+    removeShortcut(shortcut: BMNamedKeyboardShortcut) {
+        const index = this.keyboardShortcuts.findIndex(k => k == shortcut);
+        if (index == -1) return;
+
+        this._oldKeyboardShortcuts = this.keyboardShortcuts.slice();
+        this._newKeyboardShortcuts = this.keyboardShortcuts;
+
+        this.keyboardShortcuts.splice(index, 1);
+
+        this.shortcutCollection.updateEntireDataAnimated();
+
+        this._oldKeyboardShortcuts = undefined;
+        this._newKeyboardShortcuts = undefined;
+    }
+
+    textFieldShouldAutocompleteText() {
+        return YES;
+    }
+
+    textFieldShouldShowSuggestions() {
+        return YES;
+    }
+
+    textFieldSuggestionsForText(textField, text): string[] {
+        return this.widgetNames;
+    }
+
+    textFieldContentsDidChange(textField: BMTextField) {
+        const text = (textField.node as HTMLInputElement).value;
+
+        if (text == 'Document') {
+            this.widget.setProperty('Target', text);
+        }
+        else {
+            this.widget.setProperty('Target', 'Widget');
+            this.widget.setProperty('TargetWidget', text);
+        }
+    }
+    
+    numberOfSections(): number {
+        return 1;
+    }
+
+    numberOfObjectsInSectionAtIndex(index: number): number {
+        return this.keyboardShortcuts.length;
+    }
+
+    indexPathForObjectAtRow(row: number, { inSectionAtIndex: section }: { inSectionAtIndex: number; }): BMIndexPath<BMKeyboardShortcut> {
+        return BMIndexPathMakeWithRow(row, {section, forObject: this.keyboardShortcuts[row]});
+    }
+
+    indexPathForObject(object: any): BMIndexPath<BMKeyboardShortcut> {
+        const index = this.keyboardShortcuts.findIndex(v => v == object);
+
+        if (index == -1) {
+            return undefined;
+        }
+
+        return BMIndexPathMakeWithRow(index, {section: 0, forObject: object});
+    }
+    
+    cellForItemAtIndexPath(indexPath: BMIndexPath<BMKeyboardShortcut>): BMCollectionViewCell {
+        const cell = this.shortcutCollection.dequeueCellForReuseIdentifier('KeyboardShortcut') as BMKeyboardShortcutCell;
+        cell.keyboardShortcut = indexPath.object;
+        cell.configurationWindow = this;
+
+        return cell;
+    }
+
+    cellForSupplementaryViewWithIdentifier(identifier: string, { atIndexPath: atIndexPath }: { atIndexPath: BMIndexPath<any>; }): BMCollectionViewCell {
+        // Supplementary views are not used
+        throw new Error('Method not implemented.');
+    }
+    
+    useOldData(use: boolean): void {
+        if (use) {
+            this.keyboardShortcuts = this._oldKeyboardShortcuts;
+        }
+        else {
+            this.keyboardShortcuts = this._newKeyboardShortcuts;
+        }
+    }
+
+    isUsingOldData(): boolean {
+        return this.keyboardShortcuts == this._oldKeyboardShortcuts;
+    }
+
+    collectionViewCanSelectCellAtIndexPath() {
+        return NO;
+    }
+
+    collectionViewCanHighlightCellAtIndexPath() {
+        return NO;
+    }
+}
+
+/**
+ * The keyboard shortcut controller widget is a controller widget that can be used to add keyboard shortcuts to widgets
+ * or the entire document.
+ */
+@TWWidgetDefinition('Keyboard Shortcut Controller')
+export class BMKeyboardShortcutController extends TWComposerWidget implements BMWindowDelegate {
+
+    /**
+     * Set to `YES` after properties have been initialized.
+     */
+    private propertiesInitialized = NO;
+
+    widgetIconUrl(): string {
+        return require('./images/keyboardShortcutControllerIcon.png').default;
+    }
+
+    renderHtml(): string {
+        return '<div class="widget-content BMCodeHost">\
+            <div class="BMCodeHostContainer">\
+                <div class="BMKeyboardShortcutControllerIcon"></div>\
+                <div class="InlineBlock BMCHScriptEdit" >KeyboardShortcutController</div>\
+            </div>\
+        </div>';
+    }
+
+    afterRender(): void {
+        this.jqElement.find('.BMCHScriptEdit')[0].addEventListener('click', e => this.configureKeyboardShortcuts());
+    }
+
+    widgetProperties(): TWWidgetProperties {
+        require("./styles/ide.css");
+        let properties: TWWidgetProperties = {
+            name: 'Keyboard Shortcut Controller',
+            description: 'Allows specifying keyboard shortcuts on specific widgets or the entire document.',
+            category: ['Common'],
+            supportsAutoResize: NO,
+            isContainer: NO,
+            isDraggable: YES,
+            customEditorMenuText: 'Configure Keyboard Shortcuts',
+            customEditor: 'BMKeyboardShortcutController',
+            properties: {
+                Width: {
+                    description: 'Total width of the widget',
+                    baseType: 'NUMBER',
+                    isVisible: YES,
+                    defaultValue: 192,
+                    isBindingTarget: NO
+                },
+                Height: {
+                    description: 'Total height of the widget',
+                    baseType: 'NUMBER',
+                    isVisible: YES,
+                    defaultValue: 48,
+                    isBindingTarget: NO
+                },
+                Target: {
+                    baseType: 'STRING',
+                    description: 'Controls where the keyboard shortcuts are installed.',
+                    selectOptions: [
+                        {text: 'Document', value: 'Document'},
+                        {text: 'Widget', value: 'Widget'},
+                    ],
+                    defaultValue: 'Document',
+                    isVisible: NO
+                },
+                TargetWidget: {
+                    baseType: 'STRING',
+                    description: 'If the "Target" is set to "Widget" this is the display name of the widget that should recognize keyboard shortcuts.',
+                    defaultValue: '',
+                    isVisible: NO
+                },
+                // Contains the keyboard shortcuts configuration
+                _KeyboardShortcutConfiguration: {
+                    baseType: 'STRING',
+                    isVisible: NO,
+                    defaultValue: '[]'
+                }
+            }
+        };
+
+        if (EXTENSION_MODE) {
+            (<any>properties).isVisible = NO;
+        }
+
+        return properties;
+    }
+
+    /**
+     * The currently open configuration window.
+     */
+    configurationWindow?: BMKeyboardShortcutConfigurationWindow;
+
+    configureKeyboardShortcuts() {
+        if (this.configurationWindow) {
+            return this.configurationWindow.becomeKeyWindow();
+        }
+
+        const window = (new BMKeyboardShortcutConfigurationWindow).initForWidget(this);
+
+        window.delegate = this;
+        window.anchorNode = this.jqElement[0];
+        window.bringToFrontAnimated();
+
+        this.configurationWindow = window;
+    }
+
+    afterLoad() {
+        try {
+            const shortcuts = JSON.parse(this.getProperty('_KeyboardShortcutConfiguration', [])).map(k => {
+                const shortcut = BMKeyboardShortcut.keyboardShortcutWithSerializedKeyboardShortcut(k, {targetID: () => this}) as BMNamedKeyboardShortcut;
+                shortcut.name = k._name;
+
+                return shortcut;
+            });
+            this.updateEventsWithShortcutList(shortcuts);
+        }
+        catch (e) {
+            // Likely a badly formatted JSON, log and ignore
+            console.error(e);
+        }
+    }
+
+    windowWillClose(window: BMKeyboardShortcutConfigurationWindow) {
+        const shortcuts = window.serializedShortcuts;
+        this.updateEventsWithShortcutList(window.keyboardShortcuts);
+
+        this.setProperty('_KeyboardShortcutConfiguration', shortcuts);
+
+        this.configurationWindow = undefined;
+    }
+
+    widgetEvents(): Dictionary<TWWidgetEvent> {
+        const events: Dictionary<TWWidgetEvent> = {};
+
+        if (!this.propertiesInitialized) return events;
+
+        const properties = this.allWidgetProperties().properties;
+        Object.values(properties).forEach(p => {
+            if (p.type == 'event') {
+                events[p.name] = {description: p.description};
+            }
+        });
+
+        return events;
+    }
+
+    widgetServices(): Dictionary<TWWidgetService> {
+        return {
+            AcquireFocus: {description: 'Causes the widget receiving keyboard shortcuts to acquire keyboard focus.'},
+            ResignFocus: {description: 'Causes the widget receiving keyboard shortcuts to resign keyboard focus.'}
+        };
+    }
+
+    updateEventsWithShortcutList(shortcuts: BMNamedKeyboardShortcut[]) {
+        const allProperties = this.allWidgetProperties().properties;
+        const properties = allProperties as typeof allProperties & Dictionary<{isBaseProperty?: boolean}>
+
+        // Clear out all non-base properties
+        for (const property in properties) {
+            if (properties[property].type == 'event' && property.startsWith('Shortcut:')) {
+                delete properties[property];
+            }
+        }
+
+        // Then rebuild using the list of defined shortcuts
+        for (const shortcut of shortcuts) {
+            properties['Shortcut:' + shortcut.name] = {
+                isBaseProperty: false,
+                isVisible: true,
+                name: 'Shortcut:' + shortcut.name,
+                type: 'event',
+                description: `Triggered when the ${shortcut.name} shortcut is detected.`,
+                baseType: undefined as any
+            };
+        }
+
+		// Inform the platform that properties were changed and it should update the property table
+		// TODO: Determine which of these two calls is actually needed
+		(this.updatedProperties as any)({updateUi: true});
+		if (this.jqElement) {
+			this.updateProperties();
+		}
+
+        this.propertiesInitialized = YES;
+
+    }
+
+    beforeDestroy() {
+
+    }
+
+}

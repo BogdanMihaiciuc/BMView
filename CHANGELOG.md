@@ -1,3 +1,7 @@
+# 2.8.0
+
+Added a new `Keyboard Shortcut Controller` widget that can be used to add keyboard shortcuts to mashups.
+
 # 2.7.0
 
 Improved support for Thingworx 9.1.

@@ -27,3 +27,60 @@
 .BMViewEditorOpen > .au-target {
     display: none !important;
 }
+
+span[class="widget-icon au-target"] {
+    background-size: 16px 16px;
+}
+
+.BMKeyboardShortcutControllerIcon {
+	width: 32px;
+	height: 32px;
+	
+	background-image: url(../images/KeyboardShortcutControllerLarge@2x.png);
+	background-size: 32px 32px;
+	
+	display: block;
+	float: left;
+
+	position: relative;
+	left: -4px;
+}
+
+.BMKeyboardShortcutWindowToolbar {
+    background: white;
+    box-sizing: border-box;
+    border-bottom: 1px solid rgba(0, 0, 0, .1);
+}
+
+.BMKeyboardShortcutWindowContent {
+	background: rgba(245, 245, 245, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+	.BMKeyboardShortcutWindowToolbar {
+		background: rgb(40, 40, 40);
+        border-bottom: 1px solid rgba(255, 255, 255, .1);
+	}
+
+    .BMKeyboardShortcutWindowContent {
+		background: #1e1e1e;
+    }
+}
+
+.BMKeyboardShortcutView {
+    border-radius: 16px;
+    box-sizing: border-box;
+    border: 1px solid rgba(0, 0, 0, .2);
+    background-color: white;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (prefers-color-scheme: dark) {
+    .BMKeyboardShortcutView {
+        background-color: rgb(40, 40, 40);
+        border: 1px solid rgba(255, 255, 255, .2);
+    }
+}
