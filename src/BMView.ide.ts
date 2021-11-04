@@ -2766,6 +2766,7 @@ export class BMKeyboardShortcutController extends TWComposerWidget implements BM
         const window = (new BMKeyboardShortcutConfigurationWindow).initForWidget(this);
 
         window.delegate = this;
+        window.anchorNode = this.jqElement[0];
         window.bringToFrontAnimated();
 
         this.configurationWindow = window;
