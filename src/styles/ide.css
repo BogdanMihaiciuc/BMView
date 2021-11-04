@@ -28,7 +28,7 @@
     display: none !important;
 }
 
-.widget-icon {
+span[class="widget-icon au-target"] {
     background-size: 16px 16px;
 }
 
