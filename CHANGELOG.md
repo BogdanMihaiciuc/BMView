@@ -1,3 +1,7 @@
+# 2.8.3
+
+Fixes a crash that would occur when closing the layout editor after removing a constraint that was marked bindable.
+
 # 2.8.0
 
 Added a new `Keyboard Shortcut Controller` widget that can be used to add keyboard shortcuts to mashups.

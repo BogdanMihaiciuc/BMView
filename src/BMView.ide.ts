@@ -1,5 +1,5 @@
-////<reference path="../node_modules/bm-core-ui/lib/@types/BMCoreUI.min.d.ts"/>
-///<reference path="../../BMCoreUI/build/ui/BMCoreUI/BMCoreUI.d.ts"/>
+///<reference path="../node_modules/bm-core-ui/lib/@types/BMCoreUI.min.d.ts"/>
+////<reference path="../../BMCoreUI/build/ui/BMCoreUI/BMCoreUI.d.ts"/>
 
 // automatically import the css file
 import { TWWidgetDefinition } from 'typescriptwebpacksupport/widgetIDESupport'
@@ -852,6 +852,9 @@ export class BMViewWidget extends TWComposerWidget implements BMLayoutEditorDele
             var property = bindableConstraints[i];
             var constraint = this.coreUIView.constraintWithIdentifier(property);
 
+            // If the constraint cannot be found, ignore it
+            if (!constraint) continue;
+
             properties[constraint.identifier] = <any>{
                 isBindingTarget: YES, 
                 isBaseProperty: NO,
@@ -899,6 +902,9 @@ export class BMViewWidget extends TWComposerWidget implements BMLayoutEditorDele
 		for (var i = 0; i < bindableConstraints.length; i++) {
             var property = bindableConstraints[i];
             var constraint = this.coreUIView.constraintWithIdentifier(property);
+
+            // If the bindable constraint no longer exists, ignore it
+            if (!constraint) continue;
 
             properties[constraint.identifier] = <any>{
                 isBindingTarget: YES, 
@@ -2094,6 +2100,15 @@ const BMKeyboardShortcutCharacterMap: Dictionary<string> = {
     Enter: BMHTMLEntity.Return as string,
     Escape: BMHTMLEntity.Escape as string,
     Backspace: BMHTMLEntity.Delete as string,
+    // These modifier keys shouldn't appear as actual shortcut keys
+    MetaLeft: ' ',
+    MetaRight: ' ',
+    ControlLeft: ' ',
+    ControlRight: ' ',
+    AltLeft: ' ',
+    AltRight: ' ',
+    ShiftLeft: ' ',
+    ShiftRight: ' '
 };
 
 /**
