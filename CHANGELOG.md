@@ -1,3 +1,15 @@
+# 2.9.3
+
+Resolves an issue where the layout editor did not appear when invoked from a scroll view.
+
+Resolves an issue where constraints did not properly save when specified on a scroll content view.
+
+Resolves an issue where the scroll content view was not selectable in the layout editor.
+
+Resolves an issue where the constraints for a scroll content view were not properly created at runtime.
+
+Resolves an issue where the thingworx binding dropdown was not properly hidden when opening the layout editor.
+
 # 2.8.3
 
 Fixes a crash that would occur when closing the layout editor after removing a constraint that was marked bindable.
