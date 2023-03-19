@@ -24,8 +24,12 @@
     display: none !important;
 }
 
-.BMViewEditorOpen > .au-target {
+.BMViewEditorOpen > .au-target, .BMLayoutEditorManagedView > .au-target {
     display: none !important;
+}
+
+.BMScrollContentView {
+    contain: none !important;
 }
 
 span[class="widget-icon au-target"] {

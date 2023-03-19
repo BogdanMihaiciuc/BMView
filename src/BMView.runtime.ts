@@ -623,8 +623,8 @@ export class BMScrollViewWidget extends BMViewWidget {
     }
 
     appendTo(container: $, mashup: TWMashup): void {
-        super.appendTo(container, mashup);
         this.subviewMap[(this as any).properties.Id + '-content-view'] = this.coreUIView.contentView;
+        super.appendTo(container, mashup);
 		if (this.getProperty('ScrollbarStyle')) {
             let scrollbarCSS;
 			let scrollbarStyle = TW.getStyleFromStyleDefinition(this.getProperty('ScrollbarStyle'));

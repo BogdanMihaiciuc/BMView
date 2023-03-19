@@ -995,7 +995,7 @@ export class BMViewWidget extends TWComposerWidget implements BMLayoutEditorDele
                 ID = ID.substring(0, ID.length - '-content-view'.length);
             }
 
-            let nodes = this.jqElement[0].querySelectorAll('#' + ID);
+            let nodes = this.jqElement[0].parentElement.querySelectorAll('#' + ID);
             if (!nodes.length) return undefined;
             if (nodes[0].id.indexOf('-bounding-box') != -1 || isScrollViewContentView) {
                 return BMView.viewForNode(nodes[0] as HTMLElement);
@@ -1434,11 +1434,22 @@ export class BMScrollViewWidget extends BMViewWidget {
      * If this widget already had a view for it, it is released and recreated.
      */
     get rebuiltCoreUIView() {
+        const boundingBox = BMBoundingBoxOfComposerWidget(this);
         if (this._coreUIView) {
             this._coreUIView.release();
             this._coreUIView = undefined;
+
+            // After releasing the view, the content view gets removed from the document
+            // but it needs to be reattached because it is the jqElement
+            boundingBox.appendChild(this.jqElement[0]);
         }
         return this.coreUIView;
+    }
+
+    async afterRender() {
+        super.afterRender();
+
+        this.jqElement[0].classList.add('BMScrollContentView');
     }
 
 }
