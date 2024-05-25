@@ -24,7 +24,8 @@
     display: none !important;
 }
 
-.BMViewEditorOpen > .au-target, .BMLayoutEditorManagedView > .au-target {
+.BMViewEditorOpen > .au-target:not(.widget-bounding-box),
+.BMLayoutEditorManagedView > .au-target:not(.widget-bounding-box) {
     display: none !important;
 }
 
