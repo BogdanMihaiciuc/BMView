@@ -1834,7 +1834,7 @@ export class BMAttributedLabelViewWidget extends BMViewWidget {
                 fontSize = fontSize.substring(fontSize.indexOf(':') + 1, fontSize.length - 1);
                 BMCopyProperties(style, {
                     backgroundColor: styleDefinition.backgroundColor || 'transparent',
-                    color: styleDefinition.foregroundColor || styleDefinition.color || 'inherit',
+                    color: styleDefinition.foregroundColor || (styleDefinition as any).color || 'inherit',
                     borderWidth: (styleDefinition.lineThickness || 0) + 'px',
                     borderStyle: styleDefinition.lineStyle || 'none',
                     borderColor: styleDefinition.lineColor || 'transparent',
@@ -1880,7 +1880,7 @@ export class BMAttributedLabelViewWidget extends BMViewWidget {
                     fontSize = fontSize.substring(fontSize.indexOf(':') + 1, fontSize.length - 1);
                     BMCopyProperties(style, {
                         backgroundColor: styleDefinition.backgroundColor || 'transparent',
-                        color: styleDefinition.foregroundColor || styleDefinition.color || 'inherit',
+                        color: styleDefinition.foregroundColor || (styleDefinition as any).color || 'inherit',
                         borderWidth: styleDefinition.lineColor ? (styleDefinition.lineThickness || 0) + 'px' : 'none',
                         borderStyle: styleDefinition.lineColor ? styleDefinition.lineStyle || 'none' : 'none',
                         borderColor: styleDefinition.lineColor || 'transparent',
@@ -2800,7 +2800,7 @@ export class BMKeyboardShortcutController extends TWComposerWidget implements BM
 
     afterLoad() {
         try {
-            const shortcuts = JSON.parse(this.getProperty('_KeyboardShortcutConfiguration', [])).map(k => {
+            const shortcuts = JSON.parse(this.getProperty<string>('_KeyboardShortcutConfiguration', '[]')).map(k => {
                 const shortcut = BMKeyboardShortcut.keyboardShortcutWithSerializedKeyboardShortcut(k, {targetID: () => this}) as BMNamedKeyboardShortcut;
                 shortcut.name = k._name;
 
