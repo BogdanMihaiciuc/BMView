@@ -1,3 +1,7 @@
+# 2.10.4
+
+Resolves an issue where widgets could sometimes become invisible while editing the layout.
+
 # 2.9.3
 
 Resolves an issue where the layout editor did not appear when invoked from a scroll view.
